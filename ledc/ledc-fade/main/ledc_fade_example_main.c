@@ -27,9 +27,9 @@
  *
  * 3. You can also set a target duty directly without fading.
  *
- * 4. On ESP32, GPIO18/19/4/5 are used as the LEDC outputs:
- *              GPIO18/19 are from the high speed channel group
- *              GPIO4/5 are from the low speed channel group
+ * 4. On ESP32, GPIO32/25/27/13 are used as the LEDC outputs:
+ *              GPIO32/25 are from the high speed channel group
+ *              GPIO27/13 are from the low speed channel group
  *
  *    On other targets, GPIO8/9/4/5 are used as the LEDC outputs,
  *    and they are all from the low speed channel group.
@@ -40,9 +40,9 @@
 #if CONFIG_IDF_TARGET_ESP32
 #define LEDC_HS_TIMER          LEDC_TIMER_0
 #define LEDC_HS_MODE           LEDC_HIGH_SPEED_MODE
-#define LEDC_HS_CH0_GPIO       (18)
+#define LEDC_HS_CH0_GPIO       (32)
 #define LEDC_HS_CH0_CHANNEL    LEDC_CHANNEL_0
-#define LEDC_HS_CH1_GPIO       (19)
+#define LEDC_HS_CH1_GPIO       (25)
 #define LEDC_HS_CH1_CHANNEL    LEDC_CHANNEL_1
 #endif
 #define LEDC_LS_TIMER          LEDC_TIMER_1
@@ -53,14 +53,14 @@
 #define LEDC_LS_CH1_GPIO       (9)
 #define LEDC_LS_CH1_CHANNEL    LEDC_CHANNEL_1
 #endif
-#define LEDC_LS_CH2_GPIO       (4)
+#define LEDC_LS_CH2_GPIO       (27)
 #define LEDC_LS_CH2_CHANNEL    LEDC_CHANNEL_2
-#define LEDC_LS_CH3_GPIO       (5)
+#define LEDC_LS_CH3_GPIO       (13)
 #define LEDC_LS_CH3_CHANNEL    LEDC_CHANNEL_3
 
 #define LEDC_TEST_CH_NUM       (4)
-#define LEDC_TEST_DUTY         (4000)
-#define LEDC_TEST_FADE_TIME    (3000)
+#define LEDC_TEST_DUTY         (8191)
+#define LEDC_TEST_FADE_TIME    (6000)
 
 /*
  * This callback function will be called when fade operation has ended
@@ -94,10 +94,10 @@ void app_main(void)
         .timer_num = LEDC_LS_TIMER,            // timer index
         .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
     };
-    // Set configuration of timer0 for high speed channels
+    // Set configuration of timer1 for low speed channels
     ledc_timer_config(&ledc_timer);
 #ifdef CONFIG_IDF_TARGET_ESP32
-    // Prepare and set configuration of timer1 for low speed channels
+    // Prepare and set configuration of timer0 for high speed channels
     ledc_timer.speed_mode = LEDC_HS_MODE;
     ledc_timer.timer_num = LEDC_HS_TIMER;
     ledc_timer_config(&ledc_timer);
