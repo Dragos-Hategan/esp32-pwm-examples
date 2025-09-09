@@ -12,18 +12,40 @@
 static const char *TAG = "example";
 
 // Please consult the datasheet of your servo before changing the following parameters
-#define SERVO_MIN_PULSEWIDTH_US 500  // Minimum pulse width in microsecond
-#define SERVO_MAX_PULSEWIDTH_US 2500  // Maximum pulse width in microsecond
-#define SERVO_MIN_DEGREE        -90   // Minimum angle
-#define SERVO_MAX_DEGREE        90    // Maximum angle
+#define SERVO_MIN_PULSEWIDTH_US 650  // Minimum pulse width in microsecond
+#define SERVO_MAX_PULSEWIDTH_US 2620  // Maximum pulse width in microsecond
+#define SERVO_MIN_DEGREE        0   // Minimum angle
+#define SERVO_MAX_DEGREE        180    // Maximum angle
 
-#define SERVO_PULSE_GPIO             0        // GPIO connects to the PWM signal line
+#define SERVO_PULSE_GPIO             14        // GPIO connects to the PWM signal line
 #define SERVO_TIMEBASE_RESOLUTION_HZ 1000000  // 1MHz, 1us per tick
 #define SERVO_TIMEBASE_PERIOD        20000    // 20000 ticks, 20ms
 
 static inline uint32_t example_angle_to_compare(int angle)
 {
     return (angle - SERVO_MIN_DEGREE) * (SERVO_MAX_PULSEWIDTH_US - SERVO_MIN_PULSEWIDTH_US) / (SERVO_MAX_DEGREE - SERVO_MIN_DEGREE) + SERVO_MIN_PULSEWIDTH_US;
+}
+
+static void move_through_the_angles(mcpwm_cmpr_handle_t comparator, int *angle, int *step)
+{
+    ESP_LOGI(TAG, "Angle of rotation: %d", *angle);
+    ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(*angle)));
+    //Add delay, since it takes time for servo to rotate, usually 200ms/60degree rotation under 5V power supply
+    if ((*angle + *step) > 60 || (*angle + *step) < -60) {
+        *step *= -1;
+    }
+    *angle += *step;
+}
+
+static void move_start_middle_end(mcpwm_cmpr_handle_t comparator, int *angle)
+{
+    ESP_LOGI(TAG, "Angle of rotation: %d", *angle);
+    ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(*angle)));
+    switch (*angle){
+        case 0: *angle = 90; break;
+        case 90: *angle = 180; break;
+        case 180: *angle = 0; break;
+    }
 }
 
 void app_main(void)
@@ -79,13 +101,8 @@ void app_main(void)
     int angle = 0;
     int step = 2;
     while (1) {
-        ESP_LOGI(TAG, "Angle of rotation: %d", angle);
-        ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(angle)));
-        //Add delay, since it takes time for servo to rotate, usually 200ms/60degree rotation under 5V power supply
-        vTaskDelay(pdMS_TO_TICKS(500));
-        if ((angle + step) > 60 || (angle + step) < -60) {
-            step *= -1;
-        }
-        angle += step;
+        vTaskDelay(pdMS_TO_TICKS(1500));
+        //move_through_the_angles(comparator, &angle, &step);
+        move_start_middle_end(comparator, &angle);
     }
 }
